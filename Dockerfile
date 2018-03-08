@@ -99,8 +99,9 @@ FROM esxi_perl
 ### GCC ###
 
 COPY --from=glibc /src/glibc/include /include
-# Copy kernel headers... Should be "good enough"
 COPY --from=dev_tools /usr/lib/gcc/x86_64-redhat-linux/4.4.4/include /lib/gcc/x86_64-redhat-linux/4.4.7/include
+
+# Copy kernel headers... Should be "good enough"
 COPY --from=dev_tools /usr/include/asm /include/asm
 COPY --from=dev_tools /usr/include/asm-generic /include/asm-generic
 COPY --from=dev_tools /usr/include/drm /include/drm
@@ -111,7 +112,6 @@ COPY --from=dev_tools /usr/include/sound /include/sound
 COPY --from=dev_tools /usr/include/uapi /include/uapi
 COPY --from=dev_tools /usr/include/video /include/video
 COPY --from=dev_tools /usr/include/xen /include/xen
-# COPY --from=tools /src/zlib-*/include /include
 
 COPY --from=dev_tools /usr/libexec/gcc/x86_64-redhat-linux/4.4.4/* \
                       /bin/
@@ -147,12 +147,10 @@ COPY --from=busybox /bin/install \
 COPY --from=dev_tools /usr/share/automake-1.11 /usr/share/automake-1.11
 
 COPY --from=dev_tools /usr/share/libtool /usr/share/libtool
-COPY --from=dev_tools /usr/bin/readelf \
-                      /usr/bin/make \
+COPY --from=dev_tools /usr/bin/make \
                       /usr/bin/autoreconf \
                       /usr/bin/autom4te \
                       /usr/bin/aclocal \
-                      /usr/bin/ldd \
                       /usr/bin/libtool \
                       /usr/bin/m4 \
                       /usr/bin/autoconf \
@@ -177,20 +175,36 @@ COPY --from=dev_tools /usr/include/c++/4.4.4 \
 
 ### End of g++ ###
 
-# COPY --from=tools /src/zlib-* /src/zlib
+### Other useful debugging tools ###
 
-COPY --from=nut /src/nut-* /src/nut
-WORKDIR /src/nut/
-
-RUN echo  $'#include <stdio.h>\nint main(){printf("hiya\\n"); return 0;}' > /hello.c
+COPY --from=dev_tools /usr/bin/readelf \
+                      /usr/bin/ldd \
+                      /bin/
 
 
 RUN sed -i 's|/bin/bash|/bin/sh|' /bin/ldd; \
     ln -s /include /usr/include
 
-RUN mv /bin/gcc /bin/gcc_orig; \
-    echo '/bin/gcc_orig -static "${@}"' > /bin/gcc; \
-    chmod 755 /bin/gcc
+### End of tools ###
 
-RUN autoreconf -i; \
-    ./configure --disable-shared
+# COPY --from=tools /src/zlib-* /src/zlib
+# COPY --from=tools /src/zlib-*/include /include
+
+
+# FINALLY! Network UPS Tools
+
+COPY --from=nut /src/nut-* /src/nut
+
+RUN echo  $'#include <stdio.h>\nint main(){printf("hiya\\n"); return 0;}' > /hello.c
+
+# RUN mv /bin/gcc /bin/gcc_orig; \
+#     echo '/bin/gcc_orig -static "${@}"' > /bin/gcc; \
+#     chmod 755 /bin/gcc
+
+RUN cd /src/nut; \
+    echo '/bin/gcc -static "${@}"' > /src/nut/gcc ; \
+    chmod 755 /src/nut/gcc; \
+    export CC=/src/nut/gcc; \
+    autoreconf -i; \
+    ./configure --disable-shared; \
+    make man5_MANS= man8_MANS=
