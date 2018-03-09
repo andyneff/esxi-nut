@@ -1,0 +1,4 @@
+#!/bin/sh
+
+/etc/init.d/upsmon stop
+esxcli software vib update --no-sig-check -v "$(pwd)/upsmon-${NUT_VERSION}-${NUT_CLIENT_VERSION}.x86_64.vib"

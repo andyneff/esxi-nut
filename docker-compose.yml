@@ -1,0 +1,8 @@
+version: "2.3"
+
+services:
+  nut:
+    image: andyneff/nut
+    build: .
+    volumes:
+      - .:/data

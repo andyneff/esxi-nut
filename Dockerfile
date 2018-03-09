@@ -1,3 +1,4 @@
+FROM vsiri/recipe:ep AS ep
 # I wanted a static "/bin/install"
 FROM busybox:1.28.1-uclibc AS busybox
 
@@ -221,8 +222,8 @@ COPY --from=dev_tools /usr/include/c++/4.4.4 \
 
 COPY --from=dev_tools /usr/bin/readelf \
                       /usr/bin/ldd \
+                      /usr/bin/nproc \
                       /bin/
-
 
 RUN sed -i 's|/bin/bash|/bin/sh|' /bin/ldd; \
     ln -s /include /usr/include
@@ -237,5 +238,40 @@ COPY --from=nut /src/nut-* /src/nut
 
 RUN cd /src/nut; \
     autoreconf -i; \
-    ./configure; \
-    make man5_MANS= man8_MANS=
+    ./configure --disable-shared; \
+    make man5_MANS= man8_MANS= -j `nproc`
+
+COPY --from=dev_tools /bin/date /bin/date6
+COPY --from=ep /usr/local/bin/ep /bin/ep
+
+ENV NUT_CLIENT_VERSION=2.0.1
+CMD export NUT_VERSION=2.7.4; \
+    export NUT_DATE="$(date6 --rfc-3339=seconds)"; \
+    mkdir -p /data/internal_package/opt/nut/bin/ \
+             /data/internal_package/opt/nut/sbin/; \
+    cp /src/nut/clients/upsc /data/internal_package/opt/nut/bin/; \
+    cp /src/nut/clients/upsmon /data/internal_package/opt/nut/sbin/; \
+    cd /data/internal_package; \
+    tar czf /data/vib_ar/upsmon etc opt; \
+    export UPSMON_SHA256="$(sha256sum /data/vib_ar/upsmon | awk '{print $1}')"; \
+    export UPSMON_ZCAT_SHA1="$(zcat /data/vib_ar/upsmon | sha1sum | awk '{print $1}')"; \
+    export UPSMON_SIZE="$(stat -c %s /data/vib_ar/upsmon)"; \
+    ep -d /data/vib_ar/descriptor.xml.in > /data/vib_ar/descriptor.xml; \
+    ep -d /data/package/upsmon-install.sh.in > /data/package/upsmon-install.sh; \
+    ep -d /data/package/upsmon-update.sh.in > /data/package/upsmon-update.sh; \
+    cd /data/vib_ar; \
+    ar r "/data/package/upsmon-${NUT_VERSION}-${NUT_CLIENT_VERSION}.x86_64.vib" descriptor.xml sig.pkcs7 upsmon; \
+    cd /data/package; \
+    tar czf /data/NutClient-ESXi-${NUT_CLIENT_VERSION}.tar.gz *.txt *.sh "upsmon-${NUT_VERSION}-${NUT_CLIENT_VERSION}.x86_64.vib"; \
+    # It's a root file, open up permissions for outside the docker
+    chmod 666 /data/NutClient-ESXi-${NUT_CLIENT_VERSION}.tar.gz; \
+    # cleanup
+    rm /data/vib_ar/descriptor.xml \
+       /data/package/upsmon-install.sh \
+       /data/package/upsmon-update.sh \
+       /data/vib_ar/upsmon \
+       /data/internal_package/opt/nut/bin/upsc \
+       /data/internal_package/opt/nut/sbin/upsmon \
+       /data/package/upsmon-${NUT_VERSION}-${NUT_CLIENT_VERSION}.x86_64.vib; \
+    rmdir /data/internal_package/opt/nut/bin \
+          /data/internal_package/opt/nut/sbin

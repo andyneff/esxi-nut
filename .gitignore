@@ -1,0 +1,6 @@
+NutClient-ESXi-*
+vib_ar/upsmon
+package/*.vib
+internal_package/opt/nut/sbin/upsmon
+internal_package/opt/nut/bin/upsc
+package/*.vib
