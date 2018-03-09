@@ -238,7 +238,7 @@ COPY --from=nut /src/nut-* /src/nut
 
 RUN cd /src/nut; \
     autoreconf -i; \
-    ./configure --disable-shared; \
+    ./configure --disable-shared --prefix=/opt/nut; \
     make man5_MANS= man8_MANS= -j `nproc`
 
 COPY --from=dev_tools /bin/date /bin/date6
@@ -259,6 +259,7 @@ CMD export NUT_VERSION=2.7.4; \
     ep -d /data/vib_ar/descriptor.xml.in > /data/vib_ar/descriptor.xml; \
     ep -d /data/package/upsmon-install.sh.in > /data/package/upsmon-install.sh; \
     ep -d /data/package/upsmon-update.sh.in > /data/package/upsmon-update.sh; \
+    chmod 755 /data/package/upsmon-install.sh /data/package/upsmon-update.sh; \
     cd /data/vib_ar; \
     ar r "/data/package/upsmon-${NUT_VERSION}-${NUT_CLIENT_VERSION}.x86_64.vib" descriptor.xml sig.pkcs7 upsmon; \
     cd /data/package; \

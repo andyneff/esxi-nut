@@ -14,7 +14,7 @@ if notify_conf.send_mail == "1":
 
   msg_subject = "UPS Notification " + os.environ.get("NOTIFYTYPE","Email")
 
-  msg_text = "Auto Notification\n"+subprocess.Popen(['/opt/nut/bin/upsc', notify_conf.name], stdout=subprocess.PIPE).communicate()[0]
+  msg_text = "Auto Notification\n"+subprocess.Popen(['/opt/nut/bin/upsc', notify_conf.name], stdout=subprocess.PIPE).communicate()[0].decode('ascii')
 
   msg = email.mime.text.MIMEText(msg_text)
   msg['Subject'] = msg_subject
