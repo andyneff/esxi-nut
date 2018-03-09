@@ -29,7 +29,7 @@
     <file>etc/vmware/service/upsmon.xml</file>
     <file>opt/nut/bin/smtpblast</file>
     <file>opt/nut/bin/upsc</file>
-    <file>opt/nut/etc/notify.conf.template</file>
+    <file>opt/nut/etc/notify_conf.py.template</file>
     <file>opt/nut/etc/notify.py</file>
     <file>opt/nut/etc/upsmon.conf.template</file>
     <file>opt/nut/sbin/upsmon</file>

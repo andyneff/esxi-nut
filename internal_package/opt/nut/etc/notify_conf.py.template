@@ -1,0 +1,6 @@
+# mail notification configuration
+send_mail="@UPS_SENDMAIL@"
+to_email="@UPS_MAILTO@"
+from_email="@UPS_MAILFROM@"
+smtp_server="@UPS_SMTP@"
+name="@UPS_NAME@"
