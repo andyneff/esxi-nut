@@ -9,7 +9,10 @@ FROM busybox:1.28.1-uclibc AS busybox
 # All of the centos build utils in one place
 FROM centos:6 AS dev_tools
 SHELL ["/usr/bin/env", "bash", "-euvxc"]
-RUN yum groupinstall -y "Development Tools"; \
+RUN sed -i 's#mirrorlist#\#mirrorlist#g' /etc/yum.repos.d/CentOS-Base.repo; \
+    sed -i 's#\#baseurl=http:\/\/mirror#baseurl=https:\/\/vault#g' /etc/yum.repos.d/CentOS-Base.repo; \
+    yum makecache; \
+    yum groupinstall -y "Development Tools"; \
     yum clean all
 
 
